@@ -1,21 +1,25 @@
-# Definimos la clase Producto para representar un ítem del inventario
+# Clase Producto para representar un ítem del inventario
 class Producto:
 
-    # Método constructor que inicializa los atributos del producto
+    # Constructor que inicializa los atributos del producto
     def __init__(self, id_producto, nombre, cantidad, precio):
-        self.id = id_producto  # ID único del producto
-        self.nombre = nombre  # Nombre del producto
-        self.cantidad = cantidad  # Cantidad disponible en inventario
-        self.precio = precio  # Precio unitario del producto
+        self.id = id_producto     # ID único del producto
+        self.nombre = nombre      # Nombre del producto
+        self.cantidad = cantidad  # Cantidad disponible
+        self.precio = precio      # Precio unitario
 
-    # Método para actualizar la cantidad del producto
+    # Método para actualizar la cantidad con validación
     def actualizar_cantidad(self, nueva_cantidad):
-        self.cantidad = nueva_cantidad  # Asigna la nueva cantidad al atributo
+        if nueva_cantidad < 0:  # Evitamos valores negativos
+            raise ValueError("La cantidad no puede ser negativa")
+        self.cantidad = nueva_cantidad  # Se actualiza la cantidad
 
-    # Método para actualizar el precio del producto
+    # Método para actualizar el precio con validación
     def actualizar_precio(self, nuevo_precio):
-        self.precio = nuevo_precio  # Asigna el nuevo precio al atributo
+        if nuevo_precio < 0:  # Evitamos precios negativos
+            raise ValueError("El precio no puede ser negativo")
+        self.precio = nuevo_precio  # Se actualiza el precio
 
-    # Método especial que define cómo se muestra el producto como texto
+    # Método especial para mostrar el producto en consola
     def __str__(self):
-        return f"ID: {self.id}, Nombre: {self.nombre}, Cantidad: {self.cantidad}, Precio: ${self.precio:.2f}"  # Devuelve una cadena con los detalles del producto
+        return f"ID: {self.id}, Nombre: {self.nombre}, Cantidad: {self.cantidad}, Precio: ${self.precio:.2f}"

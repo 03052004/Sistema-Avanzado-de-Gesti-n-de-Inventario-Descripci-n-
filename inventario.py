@@ -1,45 +1,88 @@
-# Importamos la clase Producto para usarla dentro del inventario
-from producto import Producto
+from producto import Producto  # Importamos la clase Producto
 
-
-# Definimos la clase Inventario para gestionar múltiples productos
+# Clase Inventario con persistencia en archivo de texto
 class Inventario:
 
-    # Constructor que inicializa el diccionario de productos
-    def __init__(self):
-        self.productos = {}  # Diccionario con ID como clave y objetos Producto como valor
+    def __init__(self, archivo="inventario.txt"):
+        self.productos = {}         # Diccionario {id: Producto}
+        self.archivo = archivo      # Nombre del archivo donde se guarda el inventario
+        self.cargar_desde_archivo() # Al iniciar, intentamos cargar los productos desde el archivo
 
-    # Método para agregar un nuevo producto al inventario
+    # Método para añadir un producto
     def agregar_producto(self, producto):
-        if producto.id in self.productos:  # Verifica si el ID ya existe
-            print("❌ El producto ya existe.")  # Mensaje si el producto ya está registrado
+        if producto.id in self.productos:  # Verifica si ya existe
+            print("❌ El producto ya existe.")
         else:
-            self.productos[producto.id] = producto  # Agrega el producto al diccionario
+            self.productos[producto.id] = producto  # Se agrega al diccionario
+            self.guardar_en_archivo()              # Se refleja en el archivo
+            print(f"✅ Producto '{producto.nombre}' añadido correctamente.")
 
-    # Método para eliminar un producto por su ID
+    # Método para eliminar un producto
     def eliminar_producto(self, id_producto):
-        if id_producto in self.productos:  # Verifica si el ID existe
-            del self.productos[id_producto]  # Elimina el producto del diccionario
+        if id_producto in self.productos:           # Si existe el ID
+            eliminado = self.productos[id_producto].nombre
+            del self.productos[id_producto]         # Se borra del diccionario
+            self.guardar_en_archivo()               # Se actualiza el archivo
+            print(f"✅ Producto '{eliminado}' eliminado del inventario.")
         else:
-            print("❌ Producto no encontrado.")  # Mensaje si el producto no existe
+            print("❌ Producto no encontrado.")
 
-    # Método para actualizar cantidad y/o precio de un producto
+    # Método para actualizar un producto
     def actualizar_producto(self, id_producto, cantidad=None, precio=None):
-        producto = self.productos.get(id_producto)  # Obtiene el producto por ID
-        if producto:  # Si el producto existe
-            if cantidad is not None:  # Si se proporciona nueva cantidad
-                producto.actualizar_cantidad(cantidad)  # Actualiza cantidad
-            if precio is not None:  # Si se proporciona nuevo precio
-                producto.actualizar_precio(precio)  # Actualiza precio
+        producto = self.productos.get(id_producto)  # Se busca el producto
+        if producto:
+            try:
+                if cantidad is not None:           # Si se pasa cantidad
+                    producto.actualizar_cantidad(cantidad)
+                if precio is not None:             # Si se pasa precio
+                    producto.actualizar_precio(precio)
+                self.guardar_en_archivo()          # Guardamos cambios en archivo
+                print(f"✅ Producto '{producto.nombre}' actualizado correctamente.")
+            except ValueError as e:                # Captura errores de validación
+                print(f"⚠️ Error al actualizar: {e}")
         else:
-            print("❌ Producto no encontrado.")  # Mensaje si el producto no existe
+            print("❌ Producto no encontrado.")
 
     # Método para buscar productos por nombre
     def buscar_por_nombre(self, nombre):
-        return [p for p in self.productos.values() if
-                p.nombre.lower() == nombre.lower()]  # Devuelve lista de productos que coinciden con el nombre
+        # Retorna lista de coincidencias (case-insensitive)
+        return [p for p in self.productos.values() if p.nombre.lower() == nombre.lower()]
 
-    # Método para mostrar todos los productos del inventario
+    # Mostrar todos los productos del inventario
     def mostrar_todos(self):
-        for producto in self.productos.values():  # Itera sobre todos los productos
-            print(producto)  # Muestra cada producto usando su método __str__
+        if not self.productos:  # Si el inventario está vacío
+            print("📦 Inventario vacío.")
+        else:
+            for producto in self.productos.values():
+                print(producto)
+
+    # Guardar inventario en un archivo de texto
+    def guardar_en_archivo(self):
+        try:
+            with open(self.archivo, "w", encoding="utf-8") as f:
+                for p in self.productos.values():
+                    # Se guarda cada producto en formato CSV
+                    f.write(f"{p.id},{p.nombre},{p.cantidad},{p.precio}\n")
+        except PermissionError:  # Si no hay permisos de escritura
+            print("❌ No se tienen permisos para escribir en el archivo.")
+        except Exception as e:   # Cualquier otro error inesperado
+            print(f"⚠️ Error al guardar el archivo: {e}")
+
+    # Cargar inventario desde archivo de texto
+    def cargar_desde_archivo(self):
+        try:
+            with open(self.archivo, "r", encoding="utf-8") as f:
+                for linea in f:
+                    partes = linea.strip().split(",")  # Separar por comas
+                    if len(partes) == 4:               # Validamos 4 campos
+                        id_producto, nombre, cantidad, precio = partes
+                        self.productos[id_producto] = Producto(
+                            id_producto, nombre, int(cantidad), float(precio)
+                        )
+        except FileNotFoundError:
+            # Si el archivo no existe, se notifica pero no se rompe el programa
+            print("📄 No se encontró el archivo, se creará uno nuevo al guardar.")
+        except PermissionError:
+            print("❌ No se tienen permisos para leer el archivo.")
+        except Exception as e:
+            print(f"⚠️ Error al leer el archivo: {e}")
